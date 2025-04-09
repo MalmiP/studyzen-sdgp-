@@ -1,4 +1,3 @@
-// src/app/api/confessions.ts
 import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -31,82 +30,83 @@ const getUserId = (): string => {
   return 'ssr-placeholder-id';
 };
 
+// Updated confessionApi with type annotations
 export const confessionApi = {
-  getAllConfessions: async (): Promise<any[]> => {
+  getAllConfessions: async (): Promise<Confession[]> => {
     try {
       const response = await axios.get(`${API_URL}/confessions`);
-      return response.data;
+      return response.data as Confession[]; // Explicitly cast response data to Confession[]
     } catch (error) {
       console.error('Error fetching confessions:', error);
       throw error;
     }
   },
   
-  createConfession: async (confessionData: ConfessionData): Promise<any> => {
+  createConfession: async (confessionData: ConfessionData): Promise<Confession> => {
     try {
       const response = await axios.post(`${API_URL}/confessions`, {
         ...confessionData,
         userId: getUserId()
       });
-      return response.data;
+      return response.data as Confession; // Return a Confession object
     } catch (error) {
       console.error('Error creating confession:', error);
       throw error;
     }
   },
   
-  likeConfession: async (confessionId: string): Promise<any> => {
+  likeConfession: async (confessionId: string): Promise<Confession> => {
     try {
       const response = await axios.post(`${API_URL}/confessions/${confessionId}/like`, {
         userId: getUserId()
       });
-      return response.data;
+      return response.data as Confession; // Return updated Confession object
     } catch (error) {
       console.error('Error liking confession:', error);
       throw error;
     }
   },
   
-  dislikeConfession: async (confessionId: string): Promise<any> => {
+  dislikeConfession: async (confessionId: string): Promise<Confession> => {
     try {
       const response = await axios.post(`${API_URL}/confessions/${confessionId}/dislike`, {
         userId: getUserId()
       });
-      return response.data;
+      return response.data as Confession; // Return updated Confession object
     } catch (error) {
       console.error('Error disliking confession:', error);
       throw error;
     }
   },
   
-  addReply: async (confessionId: string, replyData: ReplyData): Promise<any> => {
+  addReply: async (confessionId: string, replyData: ReplyData): Promise<Reply> => {
     try {
       const response = await axios.post(`${API_URL}/confessions/${confessionId}/replies`, {
         ...replyData,
         userId: getUserId()
       });
-      return response.data;
+      return response.data as Reply; // Return the Reply object
     } catch (error) {
       console.error('Error adding reply:', error);
       throw error;
     }
   },
   
-  getReplies: async (confessionId: string): Promise<any[]> => {
+  getReplies: async (confessionId: string): Promise<Reply[]> => {
     try {
       const response = await axios.get(`${API_URL}/confessions/${confessionId}/replies`);
-      return response.data;
+      return response.data as Reply[]; // Return an array of Reply objects
     } catch (error) {
       console.error('Error fetching replies:', error);
       throw error;
     }
   },
   
-  getFlaggedConfessions: async (): Promise<any[]> => {
+  getFlaggedConfessions: async (): Promise<FlaggedConfession[]> => {
     try {
       const response = await axios.get(`${API_URL}/confessions/flagged`);
       console.log("Flagged confessions API response:", response.data);
-      return response.data;
+      return response.data as FlaggedConfession[]; // Return an array of FlaggedConfession objects
     } catch (error) {
       console.error('Error fetching flagged confessions:', error);
       throw error;
@@ -147,13 +147,3 @@ export interface FlaggedConfession {
   reviewed: boolean;
   timestamp: string;
 }
-
-export const fetchFlaggedConfessions = async () => {
-  const response = await fetch('/api/confessions/flagged');
-  return response.json();
-};
-
-export const approveConfession = async (id: string) => {
-  const response = await fetch(`/api/confessions/approve/${id}`, { method: 'POST' });
-  return response.json();
-};
