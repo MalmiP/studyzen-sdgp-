@@ -10,7 +10,6 @@ import { toast } from 'react-hot-toast'
 import { io, Socket } from 'socket.io-client'
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
 interface Reply {
   _id: string
   text: string
@@ -19,7 +18,6 @@ interface Reply {
   author: string | null
   userId: string
 }
-
 interface Confession {
   _id: string
   text: string
@@ -33,14 +31,12 @@ interface Confession {
   dislikedBy: string[]
   replies: Reply[]
 }
-
 // Helper function for consistent date formatting
 const formatDate = (timestamp: string) => {
   const date = new Date(timestamp);
   return date.toISOString().split('T')[0] + ' ' + 
          date.toISOString().split('T')[1].substring(0, 8);
 };
-
 export default function ConfessionsPage() {
   const [confessions, setConfessions] = useState<Confession[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -129,9 +125,9 @@ export default function ConfessionsPage() {
   const loadConfessions = async () => {
     try {
       setIsLoading(true)
-      const data = await confessionApi.getAllConfessions()
-      console.log("API response:", data);
-      setConfessions(data || []);
+      const confessionsData = await confessionApi.getAllConfessions()
+      console.log("API response:", confessionsData);
+      setConfessions(confessionsData || []);
     } catch (error) {
       toast.error('Failed to load confessions')
       console.error('Error loading confessions:', error)
@@ -153,10 +149,10 @@ export default function ConfessionsPage() {
           isAnonymous,
           author: isAnonymous ? null : currentUser
         };
-        const response = await confessionApi.createConfession(newConfessionData);
+        const newConfessionResponse = await confessionApi.createConfession(newConfessionData);
   
         // Emit the new confession to WebSocket for others to see
-        socketRef.current?.emit('newConfession', response.data); // Emit to update all clients
+        socketRef.current?.emit('newConfession', newConfessionResponse); // Fixed: use the response directly
   
         setNewConfession("");
         setCharactersRemaining(500);
@@ -188,22 +184,21 @@ export default function ConfessionsPage() {
         author: isReplyAnonymous ? null : currentUser,
       };
   
-      const response = await confessionApi.addReply(confessionId, replyData);
+      const replyResponse = await confessionApi.addReply(confessionId, replyData);
   
-      if (response.status === 200) {
-        // Emit the new reply for real-time updates
-        socketRef.current?.emit('newReply', { confessionId, reply: response.data });
+      // Fixed: No need to check status as the promise would have rejected if there was an error
+      // Emit the new reply for real-time updates
+      socketRef.current?.emit('newReply', { confessionId, reply: replyResponse });
   
-        // Update the local state for the confession
-        setConfessions(prevConfessions => prevConfessions.map(confession => 
-          confession._id === confessionId
-            ? { ...confession, replies: [...confession.replies, response.data] }
-            : confession
-        ));
+      // Update the local state for the confession
+      setConfessions(prevConfessions => prevConfessions.map(confession => 
+        confession._id === confessionId
+          ? { ...confession, replies: [...confession.replies, replyResponse] }
+          : confession
+      ));
   
-        setReplyText("");
-        toast.success("Reply posted successfully!");
-      }
+      setReplyText("");
+      toast.success("Reply posted successfully!");
     } catch (error: any) {
       if (error.response && error.response.data) {
         const errorMessage = error.response.data.message || "Failed to post reply";
@@ -232,11 +227,11 @@ export default function ConfessionsPage() {
   
   const handleLike = async (id: string) => {
     try {
-      await confessionApi.likeConfession(id)
+      const updatedConfession = await confessionApi.likeConfession(id)
       socketRef.current?.emit('confessionUpdated', { confessionId: id, type: 'like' }) // Emit updated state for all clients
-      // Update the local state of the confession
+      // Update the local state of the confession using the returned data
       setConfessions(prevConfessions => prevConfessions.map(confession => 
-        confession._id === id ? { ...confession, likes: confession.likes + 1 } : confession
+        confession._id === id ? updatedConfession : confession
       ));
     } catch (error) {
       toast.error('Failed to like confession');
@@ -246,11 +241,11 @@ export default function ConfessionsPage() {
   
   const handleDislike = async (id: string) => {
     try {
-      await confessionApi.dislikeConfession(id)
+      const updatedConfession = await confessionApi.dislikeConfession(id)
       socketRef.current?.emit('confessionUpdated', { confessionId: id, type: 'dislike' }) // Emit updated state for all clients
-      // Update the local state of the confession
+      // Update the local state of the confession using the returned data
       setConfessions(prevConfessions => prevConfessions.map(confession => 
-        confession._id === id ? { ...confession, dislikes: confession.dislikes + 1 } : confession
+        confession._id === id ? updatedConfession : confession
       ));
     } catch (error) {
       toast.error('Failed to dislike confession');
@@ -520,7 +515,6 @@ export default function ConfessionsPage() {
           )}
         </div>
       </div>
-
     
     </div>
   )
