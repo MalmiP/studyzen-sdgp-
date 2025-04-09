@@ -37,9 +37,24 @@ import {
   ListTodo,
 } from "lucide-react";
 
+interface Goal {
+  _id: string;  // Assuming the _id is a string
+  title: string;
+  description: string;
+  deadline: Date;
+  completed: boolean;
+  targets: Target[];
+}
+
+interface Target {
+  _id: string;
+  title: string;
+  completed: boolean;
+}
+
 const ProgressPage = () => {
-  const [goals, setGoals] = useState([]);
-  const [selectedGoal, setSelectedGoal] = useState(null);
+  const [goals, setGoals] = useState<Goal[]>([]); // Updated type
+  const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
   const [isAddGoalOpen, setIsAddGoalOpen] = useState(false);
   const [newGoal, setNewGoal] = useState({
     title: "",
@@ -71,13 +86,12 @@ const ProgressPage = () => {
 
   const currentGoal = goals.find((goal) => goal._id === selectedGoal) || goals[0];
 
-  const calculateProgress = (goal) => {
+  const calculateProgress = (goal: Goal) => {
     if (goal.completed) return 100;
     if (!goal.targets || goal.targets.length === 0) return 0;
     const completedTargets = goal.targets.filter((target) => target.completed).length;
     return Math.round((completedTargets / goal.targets.length) * 100);
   };
-
   // Create a new goal (allow empty fields)
   const handleAddGoal = async () => {
     try {
@@ -121,7 +135,7 @@ const ProgressPage = () => {
   };
 
   // Toggle target completion
-  const toggleTargetCompletion = async (targetId) => {
+  const toggleTargetCompletion = async (targetId: string) => {
     if (!selectedGoal) return;
     try {
       const goal = currentGoal;
@@ -142,7 +156,7 @@ const ProgressPage = () => {
   };
 
   // Mark a goal as completed
-  const markGoalCompleted = async (goalId) => {
+  const markGoalCompleted = async (goalId: string) => {
     try {
       const res = await fetch(`http://localhost:3001/api/progress/${goalId}`, {
         method: "PUT",
@@ -157,7 +171,7 @@ const ProgressPage = () => {
   };
 
   // Delete a goal
-  const deleteGoal = async (goalId) => {
+  const deleteGoal = async (goalId: string) => {
     try {
       await fetch(`http://localhost:3001/api/progress/${goalId}`, {
         method: "DELETE",
@@ -172,7 +186,7 @@ const ProgressPage = () => {
   };
 
   // Delete a target
-  const deleteTarget = async (targetId) => {
+  const deleteTarget = async (targetId: string) => {
     if (!selectedGoal) return;
     try {
       const res = await fetch(`http://localhost:3001/api/progress/${selectedGoal}/targets/${targetId}`, {
@@ -186,7 +200,7 @@ const ProgressPage = () => {
   };
 
   // Calculate days remaining until deadline
-  const getDaysRemaining = (deadline) => {
+  const getDaysRemaining = (deadline: Date) => {
     const today = new Date();
     const diffTime = new Date(deadline).getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
