@@ -33,7 +33,7 @@ export default function Chat() {
   const [room, setRoom] = useState<string>('');
   const [strangerTyping, setStrangerTyping] = useState<boolean>(false);
   const socketRef = useRef<Socket | null>(null);
-  const socketIdRef = useRef<string>('');
+  const socketIdRef = useRef<string | undefined>(undefined); // Updated type to allow undefined
   const messageEndRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -44,7 +44,7 @@ export default function Chat() {
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      socketIdRef.current = socket.id;
+      socketIdRef.current = socket.id; // This will now correctly set the socketIdRef
       setStatus('Connected. Click "New Chat" to start.');
       console.log('Connected with id:', socket.id);
     });
@@ -108,7 +108,7 @@ export default function Chat() {
 
   const sendMessage = () => {
     if (!newMessage.trim() || !room) return;
-    if (socketRef.current) {
+    if (socketRef.current && socketIdRef.current) { // Ensure socketIdRef.current is defined
       socketRef.current.emit('sendMessage', { room, message: newMessage });
       const myMessage: Message = {
         id: Date.now().toString(),
@@ -122,7 +122,7 @@ export default function Chat() {
 
   const handleTyping = (value: string) => {
     setNewMessage(value);
-    if (socketRef.current && room) {
+    if (socketRef.current && room && socketIdRef.current) { // Ensure socketIdRef.current is defined
       socketRef.current.emit('typing', { room, sender: socketIdRef.current });
     }
   };
