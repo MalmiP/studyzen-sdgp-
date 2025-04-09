@@ -43,8 +43,8 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
+        // Use `PrevButton` and `NextButton` if you want to override the navigation buttons
+        // You may also use `navButtonPrevious` and `navButtonNext` props to customize the navigation buttons
       }}
       {...props}
     />
@@ -53,4 +53,3 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
 Calendar.displayName = "Calendar"
 
 export { Calendar }
-
