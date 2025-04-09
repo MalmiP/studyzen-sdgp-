@@ -174,7 +174,7 @@ export default function JournalPage() {
   useEffect(() => {
     async function fetchEntries() {
       try {
-        const response = await axios.get('/api/journal-entries');
+        const response = await axios.get<JournalEntry[]>('/api/journal-entries');
         setEntries(response.data);
       } catch (error) {
         console.error('Failed to fetch journal entries:', error);
@@ -249,7 +249,7 @@ export default function JournalPage() {
     if (!currentEntry.lectureTitle) return;
     try {
       const response = await axios.post('/api/journal-entries', currentEntry);
-      const savedEntry = response.data;
+      const savedEntry = response.data as JournalEntry;
       setEntries([savedEntry, ...entries]);
       setShowForm(false);
       setCurrentEntry({
@@ -274,7 +274,7 @@ export default function JournalPage() {
     setAiError(null);
     try {
       const response = await axios.post(`/api/journal-entries/${entryId}/recommendations`);
-      setEntries(prev => prev.map(entry => (entry.id === response.data.id ? response.data : entry)));
+      setEntries(prev => prev.map((entry): JournalEntry => (entry.id === (response.data as JournalEntry).id ? response.data as JournalEntry : entry)));
     } catch (error: any) {
       console.error('Failed to generate AI recommendations:', error);
       setAiError(error?.message || 'Unknown error generating recommendations');
