@@ -6,7 +6,7 @@ interface StudyTimeChartProps {
   userId: string;
 }
 
-const StudyTimeChart = () => {
+const StudyTimeChart = ({ userId }: StudyTimeChartProps) => {
   const [studyData, setStudyData] = useState<any[]>([]);
   const [totalStudyTime, setTotalStudyTime] = useState<number>(0); // To keep track of total study time in seconds
   const [motivationMessage, setMotivationMessage] = useState<string>(''); // To store motivation message
@@ -14,7 +14,7 @@ const StudyTimeChart = () => {
   useEffect(() => {
     // Fetch study session data from the API
     const fetchStudyData = async () => {
-      const res = await fetch('/api/study-sessions?userId=user123'); // replace 'user123' with dynamic user ID if needed
+      const res = await fetch(`/api/study-sessions?userId=${userId}`); // Use dynamic userId
       const data = await res.json();
 
       // Calculate the total study time
@@ -24,7 +24,7 @@ const StudyTimeChart = () => {
     };
 
     fetchStudyData();
-  }, []);
+  }, [userId]);
 
   // Define animation for the line chart
   const lineAnimation = useSpring({
@@ -67,9 +67,39 @@ const StudyTimeChart = () => {
     });
   };
 
-  
+  // Chart data formatting
+  const chartData = studyData.map((session) => ({
+    name: session.date,
+    hours: session.totalStudyTime / 3600, // Convert seconds to hours
+  }));
+
+  return (
+    <div>
+      <h3>Total Study Time: {totalStudyTime / 3600} hours</h3>
+      <p>{motivationMessage}</p>
+      <button onClick={addStudySession}>Add 1 Hour Study Session</button>
+
+      <div style={{ width: '100%', height: '300px' }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+            <XAxis dataKey="name" tick={{ fill: '#3b82f6' }} />
+            <YAxis tick={{ fill: '#3b82f6' }} />
+            <Tooltip contentStyle={{ backgroundColor: '#eff6ff', borderColor: '#93c5fd', fontFamily: 'monospace' }} />
+            {/* Apply animation to only strokeDashoffset */}
+            <Line
+              dataKey="hours"
+              stroke="#2563eb"
+              strokeWidth={2}
+              dot={{ fill: '#1e40af', stroke: '#2563eb', strokeWidth: 2, r: 4 }}
+              activeDot={{ fill: '#1e40af', stroke: '#2563eb', strokeWidth: 2, r: 6 }}
+              strokeDasharray="5 5" // Optional: Add dashed stroke for better animation effect
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
 };
 
 export default StudyTimeChart;
-
-
